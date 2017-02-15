@@ -238,7 +238,9 @@ type node struct {
 
 func newNode() node {
 	return node{
+		// 发送msg给其他节点
 		propc:      make(chan pb.Message),
+		// 接受其他节点发来的msg
 		recvc:      make(chan pb.Message),
 		confc:      make(chan pb.ConfChange),
 		confstatec: make(chan pb.ConfState),
@@ -280,6 +282,7 @@ func (n *node) run(r *raft) {
 	prevHardSt := emptyState
 
 	for {
+		// 初始化待更新ready
 		if advancec != nil {
 			readyc = nil
 		} else {
@@ -291,6 +294,8 @@ func (n *node) run(r *raft) {
 			}
 		}
 
+		// leader 情况更新
+		// propc 作用？ 无leader propc设置为nil？
 		if lead != r.lead {
 			if r.hasLeader() {
 				if lead == None {
@@ -386,12 +391,14 @@ func (n *node) run(r *raft) {
 	}
 }
 
+// 使用方调用Tick()
 // Tick increments the internal logical clock for this Node. Election timeouts
 // and heartbeat timeouts are in units of ticks.
 func (n *node) Tick() {
 	select {
 	case n.tickc <- struct{}{}:
 	case <-n.done:
+	// tickc有buffer，buffer仅方便延迟处理
 	default:
 		n.logger.Warningf("A tick missed to fire. Node blocks too long!")
 	}

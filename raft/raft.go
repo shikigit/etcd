@@ -340,6 +340,7 @@ func (r *raft) nodes() []uint64 {
 	return nodes
 }
 
+// 负责将msg添加到r.msgs，node.Ready()会处理这些msgs，库使用者通过Ready()读取到msgs后发送给相应节点
 // send persists state to stable storage and then sends to its mailbox.
 func (r *raft) send(m pb.Message) {
 	m.From = r.id
@@ -684,6 +685,7 @@ func (r *raft) Step(m pb.Message) error {
 	case m.Term > r.Term:
 		lead := m.From
 		if m.Type == pb.MsgVote || m.Type == pb.MsgPreVote {
+			// 人工强制leader transfer？ 更换机器时候？
 			force := bytes.Equal(m.Context, []byte(campaignTransfer))
 			inLease := r.checkQuorum && r.lead != None && r.electionElapsed < r.electionTimeout
 			if !force && inLease {
