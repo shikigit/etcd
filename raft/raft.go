@@ -682,6 +682,7 @@ func (r *raft) Step(m pb.Message) error {
 	switch {
 	case m.Term == 0:
 		// local message
+		// Term = 0 本地消息，node中Message不设置Term，通过Step发送给其他节点
 	case m.Term > r.Term:
 		lead := m.From
 		if m.Type == pb.MsgVote || m.Type == pb.MsgPreVote {
